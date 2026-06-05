@@ -9,9 +9,11 @@ export default function AboutUs() {
     about_image: '',
     about_text_1: '',
     about_text_2: '',
-    about_features: '[]'
+    about_features: '[]',
+    about_intro_texts: '[]'
   });
   const [features, setFeatures] = useState([]);
+  const [introTexts, setIntroTexts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [aboutImageFile, setAboutImageFile] = useState(null);
@@ -43,6 +45,21 @@ export default function AboutUs() {
             { title: settingsData.about_feature_2_title || '', desc: settingsData.about_feature_2_desc || '' }
           ].filter(f => f.title));
         }
+
+        // Parse dynamic intro texts or migrate old ones
+        if (settingsData.about_intro_texts) {
+          try {
+            setIntroTexts(JSON.parse(settingsData.about_intro_texts));
+          } catch (e) {
+            setIntroTexts([]);
+          }
+        } else {
+          // Migration from old fields
+          const oldTexts = [];
+          if (settingsData.about_text_1) oldTexts.push(settingsData.about_text_1);
+          if (settingsData.about_text_2) oldTexts.push(settingsData.about_text_2);
+          setIntroTexts(oldTexts.length > 0 ? oldTexts : ['']);
+        }
       }
     } catch (error) {
       toast.error('Lỗi tải thông tin!');
@@ -67,6 +84,30 @@ export default function AboutUs() {
 
   const removeFeature = (index) => {
     setFeatures(features.filter((_, i) => i !== index));
+  };
+
+  const handleIntroTextChange = (index, value) => {
+    const newTexts = [...introTexts];
+    newTexts[index] = value;
+    setIntroTexts(newTexts);
+  };
+
+  const addIntroText = () => {
+    setIntroTexts([...introTexts, '']);
+  };
+
+  const removeIntroText = (index) => {
+    setIntroTexts(introTexts.filter((_, i) => i !== index));
+  };
+
+  const moveIntroText = (index, direction) => {
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= introTexts.length) return;
+    const newTexts = [...introTexts];
+    const temp = newTexts[index];
+    newTexts[index] = newTexts[newIndex];
+    newTexts[newIndex] = temp;
+    setIntroTexts(newTexts);
   };
 
   const handleAboutImageChange = (e) => {
@@ -99,11 +140,17 @@ export default function AboutUs() {
         }
       }
 
-      // Cập nhật features
+      // Cập nhật features và intro texts
       updatedSettings.about_features = JSON.stringify(features);
+      const filteredIntroTexts = introTexts.filter(t => t.trim());
+      updatedSettings.about_intro_texts = JSON.stringify(filteredIntroTexts);
+
+      // Tương thích ngược: Đồng bộ 2 phần tử đầu tiên vào about_text_1 và about_text_2
+      updatedSettings.about_text_1 = filteredIntroTexts[0] || '';
+      updatedSettings.about_text_2 = filteredIntroTexts[1] || '';
 
       // Chỉ filter các key thuộc về trang About Us để update
-      const aboutKeys = ['about_image', 'about_text_1', 'about_text_2', 'about_features'];
+      const aboutKeys = ['about_image', 'about_text_1', 'about_text_2', 'about_features', 'about_intro_texts'];
       const updates = aboutKeys.map(key => ({
         setting_key: key,
         setting_value: updatedSettings[key] || ''
@@ -145,14 +192,70 @@ export default function AboutUs() {
                 )}
                 <input type="file" accept="image/*" onChange={handleAboutImageChange} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
               </div>
-              <div className="flex-1 space-y-5 w-full">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Đoạn giới thiệu 1</label>
-                  <textarea value={settings.about_text_1} onChange={(e) => handleChange('about_text_1', e.target.value)} rows={4} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 shadow-sm" placeholder="Tại trung tâm, chúng tôi không chỉ dừng lại..." />
+              <div className="flex-1 space-y-4 w-full">
+                <div className="flex items-center justify-between">
+                  <label className="block text-sm font-semibold text-gray-700">Các đoạn giới thiệu chung</label>
+                  <button 
+                    type="button" 
+                    onClick={addIntroText}
+                    className="text-xs bg-blue-50 text-blue-600 px-2.5 py-1.5 rounded-lg hover:bg-blue-100 font-medium transition-colors"
+                  >
+                    + Thêm đoạn giới thiệu
+                  </button>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Đoạn giới thiệu 2</label>
-                  <textarea value={settings.about_text_2} onChange={(e) => handleChange('about_text_2', e.target.value)} rows={3} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 shadow-sm" placeholder="Với đội ngũ giáo viên..." />
+                
+                <div className="space-y-3">
+                  {introTexts.map((text, index) => (
+                    <div key={index} className="flex gap-2 items-start relative group">
+                      <div className="flex-1">
+                        <textarea 
+                          value={text} 
+                          onChange={(e) => handleIntroTextChange(index, e.target.value)} 
+                          rows={index === 0 ? 3 : 2} 
+                          className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 shadow-xs" 
+                          placeholder={`Đoạn giới thiệu thứ ${index + 1}...`} 
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1 shrink-0">
+                        {introTexts.length > 1 && (
+                          <button 
+                            type="button"
+                            onClick={() => removeIntroText(index)}
+                            className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Xóa đoạn này"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                          </button>
+                        )}
+                        {index > 0 && (
+                          <button 
+                            type="button"
+                            onClick={() => moveIntroText(index, -1)}
+                            className="p-1 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors text-xs font-bold"
+                            title="Di chuyển lên"
+                          >
+                            ▲
+                          </button>
+                        )}
+                        {index < introTexts.length - 1 && (
+                          <button 
+                            type="button"
+                            onClick={() => moveIntroText(index, 1)}
+                            className="p-1 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors text-xs font-bold"
+                            title="Di chuyển xuống"
+                          >
+                            ▼
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {introTexts.length === 0 && (
+                    <div className="text-center py-6 border border-dashed rounded-xl text-gray-400 text-xs">
+                      Chưa có đoạn giới thiệu nào. Hãy bấm nút Thêm đoạn giới thiệu ở trên.
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

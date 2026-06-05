@@ -8,7 +8,7 @@ import ConfirmModal from '../components/ConfirmModal';
 export default function WhyChooseUs() {
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+  const [descriptions, setDescriptions] = useState([]);
   const [imagePreview, setImagePreview] = useState(null);
   const [imageFile, setImageFile] = useState(null);
   const [stats, setStats] = useState([]);
@@ -49,7 +49,17 @@ export default function WhyChooseUs() {
         const settings = response.data.data;
 
         setTitle(settings.wcu_title || '');
-        setDescription(settings.wcu_description || '');
+        
+        if (settings.wcu_descriptions) {
+          try {
+            setDescriptions(JSON.parse(settings.wcu_descriptions));
+          } catch {
+            setDescriptions([]);
+          }
+        } else {
+          // Fallback from old wcu_description
+          setDescriptions(settings.wcu_description ? [settings.wcu_description] : ['']);
+        }
         
         if (settings.wcu_image) {
           setImagePreview(getImageUrl(settings.wcu_image));
@@ -119,6 +129,30 @@ export default function WhyChooseUs() {
     setFeatures(newFeatures);
   };
 
+  const handleDescChange = (index, value) => {
+    const newDescs = [...descriptions];
+    newDescs[index] = value;
+    setDescriptions(newDescs);
+  };
+
+  const addDesc = () => {
+    setDescriptions([...descriptions, '']);
+  };
+
+  const removeDesc = (index) => {
+    setDescriptions(descriptions.filter((_, i) => i !== index));
+  };
+
+  const moveDesc = (index, direction) => {
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= descriptions.length) return;
+    const newDescs = [...descriptions];
+    const temp = newDescs[index];
+    newDescs[index] = newDescs[newIndex];
+    newDescs[newIndex] = temp;
+    setDescriptions(newDescs);
+  };
+
   const handleSave = async () => {
     try {
       setLoading(true);
@@ -133,9 +167,11 @@ export default function WhyChooseUs() {
         }
       }
 
+      const filteredDescs = descriptions.filter(d => d.trim());
       const settingsToUpdate = [
         { setting_key: 'wcu_title', setting_value: title },
-        { setting_key: 'wcu_description', setting_value: description },
+        { setting_key: 'wcu_description', setting_value: filteredDescs[0] || '' },
+        { setting_key: 'wcu_descriptions', setting_value: JSON.stringify(filteredDescs) },
         { setting_key: 'wcu_stats', setting_value: JSON.stringify(stats) },
         { setting_key: 'wcu_features', setting_value: JSON.stringify(features) }
       ];
@@ -251,15 +287,71 @@ export default function WhyChooseUs() {
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Đoạn mô tả ngắn</label>
-          <textarea
-            rows="3"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="w-full px-3 py-2 border rounded-lg focus:ring-blue-500"
-            placeholder="Với triết lý giáo dục..."
-          ></textarea>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <label className="block text-sm font-semibold text-gray-700">Các đoạn mô tả ngắn</label>
+            <button 
+              type="button" 
+              onClick={addDesc}
+              className="text-xs bg-blue-50 text-blue-600 px-2.5 py-1.5 rounded-lg hover:bg-blue-100 font-medium transition-colors"
+            >
+              + Thêm đoạn mô tả
+            </button>
+          </div>
+          
+          <div className="space-y-3">
+            {descriptions.map((descText, index) => (
+              <div key={index} className="flex gap-2 items-start">
+                <div className="flex-1">
+                  <textarea 
+                    value={descText} 
+                    onChange={(e) => handleDescChange(index, e.target.value)} 
+                    rows={2} 
+                    className="w-full px-3 py-2.5 text-sm border rounded-lg focus:ring-blue-500 focus:border-blue-500 shadow-xs outline-none" 
+                    placeholder={`Đoạn mô tả thứ ${index + 1}...`} 
+                  />
+                </div>
+                <div className="flex flex-col gap-1 shrink-0">
+                  {descriptions.length > 1 && (
+                    <button 
+                      type="button"
+                      onClick={() => removeDesc(index)}
+                      className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Xóa đoạn này"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                    </button>
+                  )}
+                  {index > 0 && (
+                    <button 
+                      type="button"
+                      onClick={() => moveDesc(index, -1)}
+                      className="p-1 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors text-xs font-bold"
+                      title="Di chuyển lên"
+                    >
+                      ▲
+                    </button>
+                  )}
+                  {index < descriptions.length - 1 && (
+                    <button 
+                      type="button"
+                      onClick={() => moveDesc(index, 1)}
+                      className="p-1 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors text-xs font-bold"
+                      title="Di chuyển xuống"
+                    >
+                      ▼
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+            
+            {descriptions.length === 0 && (
+              <div className="text-center py-6 border border-dashed rounded-xl text-gray-400 text-xs">
+                Chưa có đoạn mô tả nào. Hãy bấm nút Thêm đoạn mô tả ở trên.
+              </div>
+            )}
+          </div>
         </div>
 
 

@@ -8,12 +8,12 @@ export default function Vouchers() {
   const [vouchers, setVouchers] = useState([]);
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Form modal state
   const [showFormModal, setShowFormModal] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  
+
   // Form fields
   const [code, setCode] = useState('');
   const [discount, setDiscount] = useState('');
@@ -81,7 +81,7 @@ export default function Vouchers() {
   };
 
   const handleCheckboxChange = (courseId) => {
-    setSelectedCourseIds(prev => 
+    setSelectedCourseIds(prev =>
       prev.includes(courseId)
         ? prev.filter(id => id !== courseId)
         : [...prev, courseId]
@@ -164,7 +164,7 @@ export default function Vouchers() {
           <h2 className="text-xl font-bold text-gray-800">Quản lý Mã Giảm Giá (Voucher)</h2>
           <p className="text-sm text-gray-500 mt-1">Quản lý mã ưu đãi, phần trăm giảm giá và các khóa học được áp dụng mã.</p>
         </div>
-        <button 
+        <button
           onClick={openCreateModal}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-2 shadow-sm transition-colors"
         >
@@ -223,8 +223,8 @@ export default function Vouchers() {
                     ) : (
                       <div className="flex flex-wrap gap-1">
                         {v.course_names.map((name, idx) => (
-                          <span 
-                            key={idx} 
+                          <span
+                            key={idx}
                             className="inline-block bg-gray-100 text-gray-700 border border-gray-200 px-2 py-0.5 rounded text-xs truncate max-w-[200px]"
                             title={name}
                           >
@@ -243,27 +243,26 @@ export default function Vouchers() {
                     )}
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${
-                      v.status 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-gray-100 text-gray-800'
-                    }`}>
+                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${v.status
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-gray-100 text-gray-800'
+                      }`}>
                       <span className={`w-1.5 h-1.5 rounded-full ${v.status ? 'bg-green-500' : 'bg-gray-500'}`}></span>
                       {v.status ? 'Hoạt động' : 'Tạm dừng'}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-center">
                     <div className="flex justify-center space-x-2">
-                      <button 
+                      <button
                         onClick={() => openEditModal(v)}
-                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" 
+                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                         title="Chỉnh sửa"
                       >
                         <Edit2 size={16} />
                       </button>
-                      <button 
+                      <button
                         onClick={() => handleDelete(v.id)}
-                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors" 
+                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                         title="Xóa"
                       >
                         <Trash2 size={16} />
@@ -284,7 +283,7 @@ export default function Vouchers() {
             {/* Header */}
             <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5 flex justify-between items-center text-white">
               <h3 className="text-lg font-bold">{isEdit ? 'Chỉnh sửa mã giảm giá' : 'Thêm mã giảm giá mới'}</h3>
-              <button 
+              <button
                 onClick={() => setShowFormModal(false)}
                 className="text-white hover:bg-blue-800 transition-colors p-1.5 rounded-full"
               >
@@ -298,8 +297,8 @@ export default function Vouchers() {
                 {/* Voucher Code */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1.5">Mã Voucher *</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     placeholder="Ví dụ: GIAM50, KM2026"
                     value={code}
                     onChange={(e) => setCode(e.target.value.toUpperCase())}
@@ -311,8 +310,8 @@ export default function Vouchers() {
                 {/* Discount Percentage */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1.5">Giảm giá (%) *</label>
-                  <input 
-                    type="number" 
+                  <input
+                    type="number"
                     min="0"
                     max="100"
                     placeholder="Từ 0 đến 100"
@@ -327,8 +326,8 @@ export default function Vouchers() {
               {/* Description */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1.5">Mô tả ngắn</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   placeholder="Mô tả công dụng của voucher này..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -338,10 +337,10 @@ export default function Vouchers() {
 
               {/* Terms & Conditions */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Điều kiện áp dụng</label>
-                <textarea 
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Ghi chú điều kiện hiển thị (dạng văn bản)</label>
+                <textarea
                   rows="2"
-                  placeholder="Điều kiện áp dụng (Ví dụ: Chỉ áp dụng khi đóng cọc sớm trước ngày...)"
+                  placeholder="Nhập điều kiện & lưu ý (nếu có) (Ví dụ: Áp dụng cho khóa B2. Lưu ý: Mức giảm chính thức sẽ áp dụng sau khi tư vấn viên liên hệ xác minh...)"
                   value={terms}
                   onChange={(e) => setTerms(e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-3.5 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
@@ -357,14 +356,14 @@ export default function Vouchers() {
                     Nếu <strong>không chọn</strong> khóa học nào bên dưới, hệ thống sẽ mặc định voucher này <strong>áp dụng cho toàn bộ các khóa học</strong>.
                   </span>
                 </div>
-                
+
                 <div className="border border-gray-200 rounded-lg max-h-[160px] overflow-y-auto p-3.5 space-y-2 bg-gray-50">
                   {courses.length === 0 ? (
                     <div className="text-xs text-gray-500 text-center py-4">Đang tải danh sách khóa học...</div>
                   ) : (
                     courses.map(course => (
                       <label key={course.id} className="flex items-center gap-3 cursor-pointer hover:bg-white p-1 rounded transition-colors">
-                        <input 
+                        <input
                           type="checkbox"
                           checked={selectedCourseIds.includes(course.id)}
                           onChange={() => handleCheckboxChange(course.id)}
@@ -379,8 +378,8 @@ export default function Vouchers() {
 
               {/* Active Status */}
               <div className="flex items-center gap-2">
-                <input 
-                  type="checkbox" 
+                <input
+                  type="checkbox"
                   id="voucher-status"
                   checked={status}
                   onChange={(e) => setStatus(e.target.checked)}
@@ -393,14 +392,14 @@ export default function Vouchers() {
 
               {/* Actions Footer */}
               <div className="flex justify-end gap-3 pt-3 border-t border-gray-200">
-                <button 
+                <button
                   type="button"
                   onClick={() => setShowFormModal(false)}
                   className="px-5 py-2 border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 transition-colors"
                 >
                   Hủy
                 </button>
-                <button 
+                <button
                   type="submit"
                   className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-colors"
                 >
@@ -413,7 +412,7 @@ export default function Vouchers() {
       )}
 
       {/* Confirm Delete Modal */}
-      <ConfirmModal 
+      <ConfirmModal
         isOpen={!!deletingId}
         onClose={() => setDeletingId(null)}
         onConfirm={confirmDelete}
