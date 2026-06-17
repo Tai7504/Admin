@@ -2,11 +2,11 @@
  * Utility functions for URL handling
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://103.90.225.223:8080/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
 /**
  * Get base URL without /api suffix
- * @returns {string} Base URL (e.g., http://103.90.225.223:8080)
+ * @returns {string} Base URL (e.g., http://localhost:8080)
  */
 export const getBaseURL = () => {
   return API_BASE_URL.replace(/\/api\s*$/, '');
