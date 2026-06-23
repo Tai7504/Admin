@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../api/axiosInstance';
 import { getImageUrl } from '../utils/urlHelpers';
 import { toast } from 'react-toastify';
-import { Edit2, Trash2, Plus, X, Image as ImageIcon } from 'lucide-react';
+import { Edit2, Trash2, Plus, X, Image as ImageIcon, ArrowUp, ArrowDown } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
 
 export default function Teachers() {
@@ -107,6 +107,34 @@ export default function Teachers() {
     }
   };
 
+  const handleMove = async (index, direction) => {
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= teachers.length) return;
+
+    // Hoán đổi vị trí trong mảng cục bộ
+    const updatedTeachers = [...teachers];
+    const temp = updatedTeachers[index];
+    updatedTeachers[index] = updatedTeachers[newIndex];
+    updatedTeachers[newIndex] = temp;
+
+    // Cập nhật state cục bộ để UI thay đổi mượt mà ngay lập tức
+    setTeachers(updatedTeachers);
+
+    // Tính toán sort_order liên tục
+    const sortData = updatedTeachers.map((teacher, idx) => ({
+      id: teacher.id,
+      sort_order: idx
+    }));
+
+    try {
+      await api.put('/teachers/sort-order', { sortData });
+      toast.success('Cập nhật thứ tự thành công!');
+    } catch (error) {
+      toast.error('Lỗi cập nhật thứ tự trên server!');
+      fetchTeachers(); // rollback nếu lỗi
+    }
+  };
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200">
       <div className="p-6 border-b border-gray-200 flex justify-between items-center">
@@ -127,16 +155,17 @@ export default function Teachers() {
               <th className="px-6 py-4">Họ tên</th>
               <th className="px-6 py-4">Mô tả</th>
               <th className="px-6 py-4">Trạng thái</th>
+              <th className="px-6 py-4 text-center">Thứ tự</th>
               <th className="px-6 py-4 text-center">Thao tác</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
             {loading ? (
-              <tr><td colSpan="5" className="px-6 py-8 text-center text-gray-500">Đang tải...</td></tr>
+              <tr><td colSpan="6" className="px-6 py-8 text-center text-gray-500">Đang tải...</td></tr>
             ) : teachers.length === 0 ? (
-              <tr><td colSpan="5" className="px-6 py-8 text-center text-gray-500">Chưa có giáo viên nào.</td></tr>
+              <tr><td colSpan="6" className="px-6 py-8 text-center text-gray-500">Chưa có giáo viên nào.</td></tr>
             ) : (
-              teachers.map((t) => (
+              teachers.map((t, index) => (
                 <tr key={t.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4">
                     {t.image ? (
@@ -151,6 +180,28 @@ export default function Teachers() {
                     <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${t.status ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
                       {t.status ? 'Hiển thị' : 'Đã ẩn'}
                     </span>
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <div className="flex justify-center space-x-2">
+                      <button
+                        type="button"
+                        onClick={() => handleMove(index, 'up')}
+                        disabled={index === 0}
+                        className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-500"
+                        title="Di chuyển lên"
+                      >
+                        <ArrowUp size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleMove(index, 'down')}
+                        disabled={index === teachers.length - 1}
+                        className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-500"
+                        title="Di chuyển xuống"
+                      >
+                        <ArrowDown size={16} />
+                      </button>
+                    </div>
                   </td>
                   <td className="px-6 py-4 text-center">
                     <div className="flex justify-center space-x-2">
